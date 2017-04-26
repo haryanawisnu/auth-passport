@@ -1,8 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var controllers = require('../controllers/userControllers');
+var jwthelpers = require('../helpers/jwtHelpers');
 var passport = require('passport');
-/* GET users listing. */
+
 router.post('/signup', controllers.signup);
 router.post('/signin', passport.authenticate('local', {
   session: false
@@ -10,6 +11,6 @@ router.post('/signin', passport.authenticate('local', {
   var user = req.user;
   res.send(user);
 });
-router.get('/users', controllers.getall); //login first
+router.get('/users', jwthelpers.login, controllers.getall); //login first
 
 module.exports = router;
