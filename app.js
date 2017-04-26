@@ -7,10 +7,18 @@ var bodyParser = require('body-parser');
 
 var users = require('./routes/users');
 
+var userControllers = require('./controllers/userControllers');
+
 var app = express();
 
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/authpassport');
+
+var passport = require('passport');
+var Strategy = require('passport-local').Strategy;
+
+passport.use(new Strategy(userControllers.signin));
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -25,6 +33,7 @@ app.use(bodyParser.urlencoded({
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(passport.initialize());
 app.use('/', users);
 
 // catch 404 and forward to error handler
@@ -44,5 +53,6 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
 
 module.exports = app;

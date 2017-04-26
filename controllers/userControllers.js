@@ -1,4 +1,7 @@
 var User = require('../models/user');
+var passwordHash = require('password-hash');
+var jwthelpers = require('../helpers/jwtHelpers');
+
 module.exports = {
   getall: (req, res, next) => {
     User.find().exec(function(err, result) {
@@ -11,13 +14,12 @@ module.exports = {
   },
   signup: (req, res, next) => {
     let username = req.body.username;
-    let password = req.body.password;
+    var password = passwordHash.generate(req.body.password);
     let email = req.body.email;
     User.create({
       username: username,
       password: password,
-      email: email,
-      loginStatus: false
+      email: email
     }, function(error, result) {
       if (result) {
         res.json(result);
@@ -26,28 +28,25 @@ module.exports = {
       }
     });
   },
-  signin: (req, res, next) => {
-    let username = req.body.username;
-    let password = req.body.password;
+  signin: (username, password, cb) => {
     User.findOne({
-      where: {
-        username: username
-      }
-    }).then(user => {
-      if (!user) {
-        res.json({
+      username: username
+    }).exec(function(err, result) {
+      if (!result) {
+        cb({
           success: false,
-          message: 'Authentication failed. User not found.'
+          message: 'Authentication failed. User not found.',
+          error: err
         });
-      } else if (user) {
-        if (passwordHash.verify(password, user.password)) {
-          res.json({
+      } else if (result) {
+        if (passwordHash.verify(password, result.password)) {
+          cb(null, {
             success: true,
             message: 'Enjoy your token!',
-            token: jwthelpers.sign(user)
+            token: jwthelpers.sign(result)
           });
         } else {
-          res.json({
+          cb(null, {
             message: 'Authentication failed. Wrong password.'
           });
         }
